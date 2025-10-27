@@ -9,16 +9,15 @@ if root_dir not in sys.path:
     sys.path.append(root_dir)
 from Configure.configure_Agent import Groq_api
 
-class DataFetcher:
+class question_generator:
     def __init__(self, api_key):
         #initiate with API key
         self.api_key = api_key
     
     def search_enhancer(self, query):
         # Create multiple relevant questions based on the user query
-        print(f"Fetching data for query: {query} using API key: {self.api_key}")
-        chat_prompt = self.prompt()
-        client = Groq(api_key=self.api_key)
+        
+        
         llm = ChatGroq(
     model="llama-3.1-8b-instant",
     temperature=0,
@@ -33,7 +32,7 @@ class DataFetcher:
     [
         (
             "system",
-            self.prompt(),
+            self.prompt_langchain(),
         ),
         ("human", "{input}"),
     ]
@@ -43,34 +42,18 @@ class DataFetcher:
 
         
         
-        # print("Response from local LLM:", message_llm.content)
+        
         llm_questions =self.store_questions(message_llm.content)
-        # print("Extracted Questions:", llm_questions)
+        
+        return llm_questions
 
-        response =  client.chat.completions.create(
-        messages=[
-            {
-                "role": "system",
-                "content": self.prompt(),
-            },
-            {
-                "role": "user",
-                "content": query,
-            }
-        ],
-    model="llama-3.1-8b-instant",
-)
-        # print("Response from Groq API:", response.choices[0].message.content)
-        llm_questions =self.store_questions(response.choices[0].message.content)
-        # print("Questions from Groq API:", response.choices[0].message.content)
-        print("Extracted Questions from groq:", llm_questions)
+         
     
-    def prompt(self):
-        prompt = r"""You are a financial data retrieval agent
-        Your task is to fetch the relevant data from the web but not exactly not the question first need to understand the question if you understand the question you need to ask more relevant questions for the user to get more clarity on the question once you have clarity you need to fetch the data from the web using the search_enhancer function and provide the data to the user.
-        When you give the question make it as user ask the web search question for example "what is the latest news about Apple Inc.?" you need to ask like what is latest products of apple like that
-Like what's new with the company then you need to check what is the new products of x company and how they do financially does now you need to consider all the relevant question ask about then create new questionnaire and get the answer for that also like wise create important related 5 questions and store it in a dictionary {{"question1":"", "question2":"", "question3":"", "question4":"", "question5":""}} in your output only give the 5 questions in dictionary don't give any explanations"""
-        return prompt
+    def prompt_langchain(self):
+         return """You are a financial related question generation agent.
+         Your task is to generate 5 relevant questions based on the user query to get more clarity on the question what I hope from you is your output should be in the dictionary data type by reading the dictionary we should be able to find if I need to get more clarify in the financial status of the company or the products or the market trends so your output should be like {{"question1":"", "question2":"", "question3":"", "question4":"", "question5":""}} only give the questions in the dictionary don't give any explanations
+         But when creating questions avoid asking about the answers which could be related to stocks mainl focus on financial analysis, market trends, investment strategies, economic indicators, and company performance.
+         Your task """
     
     import re, ast
 
@@ -105,5 +88,5 @@ Like what's new with the company then you need to check what is the new products
 
 
 if __name__ == "__main__":
-    fetcher = DataFetcher(Groq_api)
-    fetcher.search_enhancer("Latest financial news about Apple Inc.")
+    generator = question_generator(Groq_api)
+    generator.search_enhancer("Latest financial news about Apple Inc.")
